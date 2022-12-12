@@ -1,0 +1,99 @@
+---
+title: "Untitled"
+output: html_document
+date: "2022-12-12"
+---
+```{r}
+#Setting up enviroment
+setwd("~/Desktop/Survival Models/CW/SM-CW")
+lymp.data <- read.csv("lymphoma.csv",header=T)
+duck.data <- read.table("duck.txt",header = T)
+library(survival) #basic functions for survival modelling
+library(survminer) # package to produce much nicer visualisations
+library(dplyr)
+
+```
+
+```{r}
+lymp.km <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data)
+
+# Visualize with survminer
+ggsurvplot(lymp.km, data = lymp.data)
+ggsurvplot(lymp.km, data = lymp.data,conf.int =T)
+
+#Doing it the way taught in tutorial
+#(a)
+plot(lymp.km )
+
+#Viewing the plots it is clear that that using the data present the asymp group has a much higher survival than symp group
+
+#(b)
+#Finding CI (95%)
+lymp.95 <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data,conf.int=0.95)
+summary(lymp.95)
+#6 year survival (52 weeks in a year) is t=312
+
+#Asymptomatic (t>=301)
+c(0.309, 0.690)
+#Symptomatic (t>=281)
+c(0.0156, 0.642)
+
+#(c)
+summary(lymp.km)
+#For Asymptomatic time is some point greater than 301 weeks (study ended)
+#For Symptomatic time is 276 weeks (drops from 0.3 to 0.2)
+
+#d
+lymp.na <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data,type = "fleming")
+plot(lymp.na)
+plot(lymp.km)
+#Similar but na estimates are shifted up slightly and the symp group is shifted up more than the asymp group
+#Why is this: 
+
+#e
+lymp.95.na <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data,conf.int=0.95,type="fleming")
+summary(lymp.95.na)
+
+#Asymptomatic (t>=301)
+c( 0.319, 0.697)
+#Symptomatic (t>=281)
+c(0.0340, 0.621)
+```
+
+```{r}
+## Question 2
+#a
+#USing Weibull regression models
+
+#c
+#Need to figure out if need to edit censoring
+duck.data <- duck.data%>%
+  mutate(Cens=abs(Observed-1))
+  
+duck.cox <- coxph(Surv(Time,event=Observed)~Age+Weight+Length,data=duck.data)
+plot(survfit(duck.cox))
+summary(duck.cox)
+#Hazard of dieing increases with age (HR>1)
+#Weight slightly decreases 0.004 reduction in hazard for every gram
+#Length slightly increases hazard (1.0126)
+
+#Note that none of the variables are significatnt!
+
+# #testing alternative (looks much worse)
+# duck.cox <- coxph(Surv(Time,event=Cens)~Age+Weight+Length,data=duck.data)
+# plot(survfit(duck.cox))
+# summary(duck.cox)
+
+#d
+
+
+#estimating the survival function using the full cox model
+cox.duck.est<- survfit(duck.cox,data.frame("Age"=1,"Weight"=1000,"Length"=250))
+plot(cox.duck.est, ylab= "Survival function", xlab="Time",conf.int =F)
+
+
+data.frame(Age=1,Weight=1000,Length=250)
+```
+
+
+
