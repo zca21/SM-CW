@@ -8,10 +8,12 @@ date: "2022-12-12"
 setwd("~/Desktop/Survival Models/CW/SM-CW")
 lymp.data <- read.csv("lymphoma.csv",header=T)
 duck.data <- read.table("duck.txt",header = T)
+mortality.data <- read.csv("mortality.csv",header=T)
 library(survival) #basic functions for survival modelling
 library(survminer) # package to produce much nicer visualisations
-library(dplyr)
-
+library(tidyverse)
+library(kableExtra)
+library(readxl)
 ```
 
 ```{r}
@@ -36,6 +38,12 @@ legend("topright", legend = c("Asymptomatic", "Symptomatic"),
 col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
 #Viewing the plots it is clear that the asymptomatic group has a higher survival probability than the symptomatic group for all
 #time, thus those in asymptomatic group have a longer survival time than those in the symptomatic group (on average).
+
+#using log rank test
+survdiff(Surv(time,event=cens) ~ symp, data=lymp.data)
+#Furthermore performing a log-rank test we attain a Chi-Squared statistic of 8.7 with 1 degree of freedom
+#corresponding to a p-value of 0.003. As this p-value is significant (less than 0.05) we reject the null
+#Therefore we have evidence that statistically significant difference of survival between groups () backs up the plot
 
 #Part b
 #Finding CI (95%)
@@ -89,53 +97,307 @@ c(0.0340, 0.621)
 ```
 
 
-```{r}
-plot(lymp.na,
-     col=c("red","blue"),
-     xlab = "Time (weeks)",
-     ylab = "Survival probability",
-     main = "Nelson-Aalen survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma")
-plot(lymp.km,
-     col=c("red","blue"),
-     xlab = "Time (weeks)",
-     ylab = "Survival probability",
-     main = "Kaplan Meier survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma")
-```
+
 
 ```{r}
 ## Question 2
-#a
-#USing Weibull regression models
 
-#c
-#Need to figure out if need to edit censoring
-duck.data <- duck.data%>%
-  mutate(Cens=abs(Observed-1))
-  
-duck.cox <- coxph(Surv(Time,event=Observed)~Age+Weight+Length,data=duck.data)
-plot(survfit(duck.cox))
-summary(duck.cox)
-#Hazard of dieing increases with age (HR>1)
-#Weight slightly decreases 0.004 reduction in hazard for every gram
-#Length slightly increases hazard (1.0126)
+#Note that only have sample of 50 ducks thus power small due to small sample of events when subsetting
 
-#Note that none of the variables are significatnt!
+#Part a
+#Using Weibull regression models (accelerated failure regression model)
 
-# #testing alternative (looks much worse)
-# duck.cox <- coxph(Surv(Time,event=Cens)~Age+Weight+Length,data=duck.data)
-# plot(survfit(duck.cox))
-# summary(duck.cox)
+#Testing all possible models that do not include interactions
+duck.wei.reg.all <- survreg(Surv(Time,event=Observed) ~ Age+Weight+Length, data = duck.data)
+summary(duck.wei.reg.all)
 
-#d
+duck.wei.reg.AW <- survreg(Surv(Time,event=Observed) ~ Age+Weight, data = duck.data)
+summary(duck.wei.reg.AW)
+
+duck.wei.reg.WL <- survreg(Surv(Time,event=Observed) ~ Weight+Length, data = duck.data)
+summary(duck.wei.reg.WL)
+
+duck.wei.reg.AL <- survreg(Surv(Time,event=Observed) ~ Age+Length, data = duck.data)
+summary(duck.wei.reg.AL)
+
+duck.wei.reg.A <- survreg(Surv(Time,event=Observed) ~ Age, data = duck.data)
+summary(duck.wei.reg.A)
+
+duck.wei.reg.W <- survreg(Surv(Time,event=Observed) ~ Weight, data = duck.data)
+summary(duck.wei.reg.W)
+
+duck.wei.reg.L <- survreg(Surv(Time,event=Observed) ~ Length, data = duck.data)
+summary(duck.wei.reg.L)
+
+duck.wei.reg.null <- survreg(Surv(Time,event=Observed) ~ 1, data = duck.data)
+summary(duck.wei.reg.null)
+
+#All models (with explanatory variables) fail goodness of fit test (Chi-squared) with a non-significant p-value thus fail
+#to reject null that simpler model (null model) has just as good fit to data
+#All models have no significant p-values for explanatory variables
+#Thus no evidence that variables have a significant effect on survival for ducks
+#Therefore use null model that assumes same survival probability for all ducks (regardless of age, length or weight)
+
+#Looking at full model
+summary(duck.wei.reg.all) 
+#All p-values insignificant thus likely any differences could be due to chance instead of from the variable
+#age has negative coefficient (-0.36903) thus older duck will increase scale parameter theta and increase hazard compared to younger duck with all other variables constant
+#weight has a positive coefficient (0.00364) thus heavier ducks will decrease scale parameter theta and decrease hazard compared to lightwe ducka with all other variables constant
+#Length has a negative coefficient (-0.01203) thus longer ducks increase the scale parameter theta and increase the hazard compared to shorter ducks with all other variables held constant
+
+#Using AIC (information criteria for model selection we start with full model and perform backward selection)
+duck.wb.all <- survreg(Surv(Time,event=Observed) ~ Age*Weight+Weight*Length+Age*Length, data = duck.data)
+final.model.wb <- step(duck.wei.reg.all,data=duck.data,direction = "backward",trace = T)
+summary(final.model.wb)
+final.model.wb$coefficients
+#Choose null model
+AIC(survreg(Surv(Time,event=Observed) ~ Age*Weight*Length, data = duck.data))
+AIC(final.model.wb)
+#Lowest AIC is from null model
+
+#Part b - Is Weibull distribution a reasonable model?
+#Note that Weibull model assumes that hazard rate changes linearly across time (change in hazard is linear)
+#This seem reasonable (ducks can live up to 20 years) so no change in there survival for 63 days for 1 year old for 0 year old may expect some change but
+#as insignificant from year 1 no issue with this assumption
+#Use comparison to Kaplan Meier plot for this
+
+duck.km <- survfit(Surv(Time,event=Observed) ~ 1, data=duck.data)
+plot(duck.km, ylab= "Survival function", xlab="Time (days)", col = "red",conf.int = F,
+     main = "Estimated Kaplan Meier and Weibull survival curves")
+
+alpha <- 1/duck.wei.reg.null$scale
+beta_0 <- exp(-duck.wei.reg.null$coefficients[1])
+curve(expr = exp(-(beta_0*x)^alpha), from = 0, to = 63, add = TRUE, col="blue")
+legend("topright", legend = c("Kaplan Meier", "Weibull"),
+col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
+#Looking at the curve it looks like a good approximation of the Kaplan Meier estimate
+#Thus Weibull distribution is a reasonable model 
+
+duck.age.km <- survfit(Surv(Time,event=Observed) ~ Age, data=duck.data)
+plot(duck.age.km, col = c("red", "blue"),
+     xlab = "Time (days)",
+     ylab = "Survival probability",
+     main = "Kaplan Meier survival estimates of ducks split by age")
+legend("topright", legend = c("Age: 0", "Age: 1"),
+col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
+#Furthermore looking at the 2 Age groups for Kaplan Meier as they cross implies no
+#significant difference in survival between 2 groups - as the insignificant p values
+#was saying for Weibull regression models
+
+#Part c
+#Fitting cox models
+duck.cox.all <- coxph(Surv(Time,event=Observed)~Age+Weight+Length,data=duck.data)
+summary(duck.cox.all)
+
+duck.cox.AL <- coxph(Surv(Time,event=Observed)~Age+Length,data=duck.data)
+summary(duck.cox.AL)
+
+duck.cox.AW <- coxph(Surv(Time,event=Observed)~Age+Weight,data=duck.data)
+summary(duck.cox.AW)
+
+duck.cox.WL <- coxph(Surv(Time,event=Observed)~Weight+Length,data=duck.data)
+summary(duck.cox.WL)
+
+duck.cox.A <- coxph(Surv(Time,event=Observed)~Age,data=duck.data)
+summary(duck.cox.A)
+
+duck.cox.L <- coxph(Surv(Time,event=Observed)~Length,data=duck.data)
+summary(duck.cox.L)
+
+duck.cox.W <- coxph(Surv(Time,event=Observed)~Weight,data=duck.data)
+summary(duck.cox.W)
+
+duck.cox.null <- coxph(Surv(Time,event=Observed)~1,data=duck.data)
+summary(duck.cox.null)
+#All models have insignificant explanatory variables
+
+#Plotting cox null model
+plot(survfit(duck.cox.null),col=c("blue","red","red"),
+     xlab = "Time (days)",
+     ylab = "Survival probability",
+     main = "Cox survival estimates of ducks")
+
+#Considering model with all variables
+summary(duck.cox.all) 
+#Hazard of dieing increases with age HR is 1.5893 thus hazard is increased by 59% if age=1 compared to age=0 with all other variables held constant
+#An increase in weight slightly decreases the hazard (HR of 0.9958 for a gram increase in weight) thus for a 100 gram increase in weight decreases hazard by 34% (exp(-0.004197*100))
+#with all other variables held constant (comparing duck to duck 100 grams heavier)
+#An increase in length increases hazard (HR of 1.0126 for a 1cm increase in length) thus for a 5cm increase in length, increases hazard by 6.4% (exp(0.012487*5))
+
+#Note that none of the variables are significant!
+#And null model has lowest AIC (127.9987) (if use that as model selection criteria then choose null model)
+AIC(duck.cox.W)
+AIC(duck.cox.null)
 
 
+# part d
 #estimating the survival function using the full cox model
 cox.duck.est<- survfit(duck.cox,data.frame("Age"=1,"Weight"=1000,"Length"=250))
 plot(cox.duck.est, ylab= "Survival function", xlab="Time",conf.int =F)
-
-
-data.frame(Age=1,Weight=1000,Length=250)
 ```
 
+```{r}
+## Question 3 
+mortality.data <- read.csv("mortality.csv",header=T)
+#Part a - calculating crude central mortality rates
+mortality.data<- mortality.data%>%
+  mutate(cc.mort.rate.male=Male.deaths/Male.exposed,
+         cc.mort.rate.female=Female.deaths/Female.exposed)%>%
+  rename("Age"="Age..x.")
+
+plot.mort.data.female <- mortality.data%>%
+  dplyr::select(Age,cc.mort.rate.female)%>%
+  mutate(gender="Female")%>%
+  rename("cc.mort.rate"="cc.mort.rate.female")
+
+plot.mort.data.male <- mortality.data%>%
+  dplyr::select(Age,cc.mort.rate.male)%>%
+  mutate(gender="male")%>%
+  rename("cc.mort.rate"="cc.mort.rate.male")
+
+plot.mort.data <- rbind(plot.mort.data.female,plot.mort.data.male)%>%
+  mutate(log.cc.mort.rate=log(cc.mort.rate))
+  
+
+#Plotting
+ggplot(aes(x=Age,y=log.cc.mort.rate,colour=gender),data=plot.mort.data)+
+  geom_point()+
+  ylab("Estimated log crude central mortality rate")
+#Note can add lm line via geom_smooth
+
+#Part b - calculating q_{x} 
+
+#(i) Under the assumption of a constant force of mortality 
+mortality.data <- mortality.data %>%
+  mutate(qx.const.male = 1-exp(-cc.mort.rate.male),
+         qx.const.female = 1-exp(-cc.mort.rate.female),
+         qx.unif.male = cc.mort.rate.male/(1+0.5*cc.mort.rate.male),
+         qx.unif.female = cc.mort.rate.female/(1+0.5*cc.mort.rate.female))
+
+#creating lifetable
+
+#under uniform dist of death for male
+lx.unif.male <- lx.unif.female <- NULL
+lx.unif.male[1] <- lx.unif.female[1] <- 100000
+for (i in 1:42){
+lx.unif.male[i+1] <- lx.unif.male[i]*(1-mortality.data$qx.unif.male[i])
+lx.unif.female[i+1] <- lx.unif.female[i]*(1-mortality.data$qx.unif.female[i])
+}
+
+#Under constant force of mortality
+lx.const.male <- lx.const.female <- NULL
+lx.const.male[1] <- lx.const.female[1] <- 100000
+for (i in 1:42){
+lx.const.male[i+1] <- lx.const.male[i]*(1-mortality.data$qx.const.male[i])
+lx.const.female[i+1] <- lx.const.female[i]*(1-mortality.data$qx.const.female[i])
+}
+
+#Creating table of results
+data.frame("Age"=seq(from=60,to=102,by=1),
+                        "lx.unif.male"=lx.unif.male,
+                        "lx.const.male"=lx.const.male,
+                        "lx.unif.female"=lx.unif.female,
+                        "lx.const.female"=lx.const.female)%>%
+  filter(Age %in% c(60,65,70,75,80,85,90,95,100))%>%
+  kable()%>%
+  kable_classic()
+
+# Part c - calculate complete and curate life expentancies for males and females at age 60
+sum(lx.const.male[2:43])/100000
+sum(lx.unif.male[2:43])/100000
+
+sum(lx.const.female[2:43])/100000
+sum(lx.unif.female[2:43])/100000
+
+#complete (using assumption of uniform death)
+sum(lx.unif.male[2:43])/100000 +0.5
+sum(lx.unif.female[2:43])/100000 +0.5
+
+#Part d
+# comparing to whole population
+ELT17 <- read_excel("ELT17.xls")
+
+ELT17.male <- ELT17[,1:4] %>% 
+  filter(Age %in% c(0,10,20,30,40,50,60,70,80,90,100))%>%
+  rename("lx"="Males","qx"="...3","ex"="...4")%>%
+  mutate(lx=as.numeric(lx),
+         qx=as.numeric(qx),
+         ex=as.numeric(ex),
+         Age=as.numeric(Age))
+
+ELT17.female <- ELT17[,c(1,5,6,7)] %>% 
+  filter(Age %in% c(0,10,20,30,40,50,60,70,80,90,100))%>%
+  rename("lx"="Females","qx"="...6","ex"="...7")%>%
+  mutate(lx=as.numeric(lx),
+         qx=as.numeric(qx),
+         ex=as.numeric(ex),
+         Age=as.numeric(Age))
+
+#Formal test (jusing unifrom dist of deaths to calculate mxs )
+
+#For males
+ELT17.male <- ELT17.male%>%
+  mutate(mxs = qx/(1-0.5*qx))
+
+mort.male.comp <- mortality.data%>%
+  filter(Age %in% c(60,70,80,90,100))%>%
+  dplyr::select(Male.exposed,Male.deaths,Age)
+
+test.data.male <- inner_join(mort.male.comp,ELT17.male,by="Age")%>%
+  mutate(test.stat = ((Male.deaths-Male.exposed*mxs)^2)/Male.exposed*mxs)
+
+X2.male <- sum(test.data.male$test.stat)
+#calculating p-value
+1-pchisq(X2.male,df=5)
+#Not significant (p- value is 1 (3 d.p.)) therefore fail to reject null thus for males mx=mxs 
+#(death rates the same in this insured population compared to whole population of England and Wales)
+
+#For females
+ELT17.female <- ELT17.female%>%
+  mutate(mxs = qx/(1-0.5*qx))
+
+mort.female.comp <- mortality.data%>%
+  filter(Age %in% c(60,70,80,90,100))%>%
+  dplyr::select(Female.exposed,Female.deaths,Age)
+
+test.data.female <- inner_join(mort.female.comp,ELT17.female,by="Age")%>%
+  mutate(test.stat = ((Female.deaths-Female.exposed*mxs)^2)/Female.exposed*mxs)
+
+X2.female <- sum(test.data.female$test.stat)
+#calculating p-value
+1-pchisq(X2.female,df=5)
+#Not significant (p-value is 0.99) therefore fail to reject null thus for females mx=mxs 
+#(death rates the same in this insured population compared to whole population of England and Wales)
+
+#Part e - use a Gompertz log-linear model to produce a set of graduated central mortality rates from the crude mortality data
+
+#From crude mortality data
+
+grad.gompertz <- glm(Male.deaths ~ Age+offset(log(Male.exposed)),family = poisson(link=log),data=mortality.data)
+summary(grad.gompertz)
+
+#calculating gompertx estimated mx
+gomp.mx <- data.frame("Age"=seq(from=60,to=102,by=1),
+                      "mx"=exp(grad.gompertz$coefficients[1]+seq(from=60,to=102,by=1)*grad.gompertz$coefficients[2]),
+                      "type"=rep("Gompertz",43))
+
+comp.mort.plot.data <- mortality.data%>%
+  dplyr::select(Age,cc.mort.rate.male)%>%
+  rename("mx"="cc.mort.rate.male")%>%
+  mutate("type"="Crude")
+
+comp.mort.plot.data <- rbind(gomp.mx,comp.mort.plot.data)%>%
+  mutate(log.mx=log(mx),
+         shape2=c(rep(16,43),rep(17,43)))
+
+ggplot(aes(x=Age,y=log.mx,colour=type),data=comp.mort.plot.data)+
+  geom_point(shape=comp.mort.plot.data$shape2)+
+  geom_line()+
+  xlab("Age (years)")+
+  ylab(expression("log m"[x]))+
+  ggtitle("Comparing crude and graduates rates for male population")+
+  guides(color = guide_legend(
+    override.aes=list(shape = c(17,16))))
+```
 
 
