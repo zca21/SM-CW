@@ -42,7 +42,7 @@ summary(lymp.km)
 survdiff(Surv(time,event=cens) ~ symp, data=lymp.data)
 ```
 
-```{r,echo=F,fig.align='center'}
+```{r,echo=F,fig.align='center',fig.width=10,fig.height=4}
 #Producing KM plot
 plot(lymp.km,
      col=c("red","blue"),
@@ -75,12 +75,13 @@ summary(lymp.km)
 #For Asymptomatic time is some point greater than 301 weeks (study ended)
 #For Symptomatic time is 276 weeks (drops from 0.3 to 0.2)
 ```
-For the symptomatic and asymptomatic groups the estimated time the survival probability is below 30% is 276 weeks and some time greater than 388 weeks respectively. As the asymptomatic group had a survival probability greater than 30% (**46.5%**) at the end of study (388 weeks) I can only specify the time survival probability is below 30% is some time after this.
+For the symptomatic group the estimated time the survival probability is below 30% is 276 weeks.
 
 ## Part d:
 ```{r,include=F}
 #Part d
 lymp.na <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data,type = "fleming")
+
 
 #Estimates are very similar, Nelson-Aalen estimates have survival portability shifted up (increased) slightly compared to Kaplan Meier
 # estimates and this shift (increase in survival probability) is greater for the symptomatic group
@@ -100,14 +101,20 @@ plot(lymp.na,
      ylab = "Survival probability",
      main = "Nelson-Aalen survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma",
      cex.main=0.8)
+legend("topright", legend = c("Asymptomatic", "Symptomatic"),
+col = c("red", "blue"), lty = c(1, 1), cex = 0.5)
 plot(lymp.km,
      col=c("red","blue"),
      xlab = "Time (weeks)",
      ylab = "Survival probability",
      main = "Kaplan Meier survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma",
      cex.main=0.8)
+legend("topright", legend = c("Asymptomatic", "Symptomatic"),
+col = c("red", "blue"), lty = c(1, 1), cex = 0.5)
 ```
-Viewing the survival estimates via plots they are very similar. The Nelson-Aalen estimates have a survival portability shifted up (increased) slightly compared to Kaplan Meier estimates and this shift (increase in survival probability) is greater for the symptomatic group. The survival estimates are similar for the asymptomatic group as the $\frac{d_{j}`}{r_{j}}$ is small for all times with largest value at time with a corresponding value of . Due to this small value ... is approximately equal to by taylor expasion. However for the symptomatic group as the sample is smaller for this subgroup the value of $\frac{d_{j}`}{r_{j}}$ is larger with ... this gives the larger discrepancy of survival in the later times seen in the table below.
+Viewing the survival estimates via plots they are very similar. The Nelson-Aalen estimates have a survival probability shifted up (increased) slightly compared to the Kaplan Meier estimates and this shift (increase in survival probability) is greater for the symptomatic group. The survival estimates are similar for the asymptomatic group as the $\frac{d_{j}`}{r_{j}}$ (where $d_{j}$ is number of events at observed event time $t_{j}$ and $r_{j}$ is number at risk at $t_{j}$) is small for all observed event times $t_{j}$ with the largest value of $\frac{1}{13}$ at event time 301 weeks. Due to $\frac{d_{j}`}{r_{j}}$ being small for all $t_{j}$ the survival estimates are approximately equal ($\hat{S}_{NA}(t) \approx \hat{S}_{KM}(t)$) which can be proved by Taylor expansion. This is what also causes the change in estimates to be greater for the symptomatic group as the sample is smaller for this subgroup the value of $\frac{d_{j}`}{r_{j}}$ is larger with the largest value of 0.5 at event time 281 weeks. $\frac{d_{j}`}{r_{j}}$ is still small however as it is larger this causes the larger difference in survival estimates observed due to the approximation from Taylor expansion being less reliable.
+
+
 
 ## Part e:
 ```{r, include=F}
@@ -125,3 +132,127 @@ For the asymptomatic and symptomatic groups the 95% confidence interval of the N
 \newpage
 
 # Question 2:
+## Part a:
+Fitting Weibull regression models to the duck survival time data I used AIC as my selection criteria and started with a model including all possible covariates and removed variables that lead to a new model with a smaller AIC. Starting with a hierarchical model with the three way interaction between age, weight and length (and thus all lower order terms), applying my model selection criteria, my final model was the null model with an AIC of **209.97** compared to an AIC of **216.08** for the initial model. This final model implies that all the covariates (age, weight and length) have no effect on the survival of the ducks. Moreover, creating a model with the covarites age, weight and length all are insignificant (had a p-value greater than 0.05). Thus, using the data provided I conclude that the survival of the ducks does not depend on explanatory variables age, weight and length.
+
+```{r, include=F}
+#Using AIC (information criteria for model selection we start with full model and perform backward selection)
+duck.wb.all <- survreg(Surv(Time,event=Observed) ~ Age*Weight*Length, data = duck.data)
+final.model.wb.1 <- step(duck.wb.all,data=duck.data,direction = "backward",trace = T)
+AIC(final.model.wb.1)
+#216.0846
+#Note that the backward selection gets 'stuck' as all 2 way interactions but not 3 way has higher AIC (even though lower order models have lower AIC)
+
+#`unsticking` model selection
+duck.wb.2int <- survreg(Surv(Time,event=Observed) ~ Age*Weight+Weight*Length+Age*Length, data = duck.data)
+final.model.wb.2 <- step(duck.wb.2int,data=duck.data,direction = "backward",trace = T)
+AIC(final.model.wb.2)
+#209.9668 - has lower AIC
+final.model.wb.2$coefficients #final model is null model (only includes intercept)
+final.wb <- final.model.wb.2
+
+duck.wb.simple <- survreg(Surv(Time,event=Observed) ~ Age+Weight+Length, data = duck.data)
+AIC(duck.wb.simple)
+#Note that no interaction model has AIC of 213.5725
+summary(duck.wb.simple)
+```
+## Part b:
+A Weibull model assumes that the change in hazard rate is linear with time. MAYBE TALK ABOUT THIS ASSUMPTION?. Comparing the Weibull estimate with the Kaplan Meier estimate of survival gives the below plot. The plot shows that the Weibull estimate is consistent with the Kaplan Meier estimate thus the Weibull distribution is a reasonable model. (say somethign about KM being non-parametric thus can "trust")
+```{r,echo=F,fig.align='center',fig.width=10,fig.height=5}
+#Part b - Is Weibull distribution a reasonable model?
+#Note that Weibull model assumes that hazard rate changes linearly across time (change in hazard is linear)
+#This seem reasonable (ducks can live up to 20 years) so no change in there survival for 63 days for 1 year old for 0 year old may expect some change but
+#as insignificant from year 1 no issue with this assumption
+#Use comparison to Kaplan Meier plot for this
+
+duck.km <- survfit(Surv(Time,event=Observed) ~ 1, data=duck.data)
+plot(duck.km, ylab= "Survival function", xlab="Time (days)", col = "red",conf.int = F,
+     main = "Estimated Kaplan Meier and Weibull survival curves \n for duck survival data")
+
+alpha <- 1/final.wb$scale
+beta_0 <- exp(-final.wb$coefficients[1])
+curve(expr = exp(-(beta_0*x)^alpha), from = 0, to = 63, add = TRUE, col="blue")
+legend("topright", legend = c("Kaplan Meier", "Weibull"),
+col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
+#Looking at the curve it looks like a good approximation of the Kaplan Meier estimate
+#Thus Weibull distribution is a reasonable model 
+```
+
+```{r, include=F}
+duck.age.km <- survfit(Surv(Time,event=Observed) ~ Age, data=duck.data)
+plot(duck.age.km, col = c("red", "blue"),
+     xlab = "Time (days)",
+     ylab = "Survival probability",
+     main = "Kaplan Meier survival estimates of ducks split by age")
+legend("topright", legend = c("Age: 0", "Age: 1"),
+col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
+#Furthermore looking at the 2 Age groups for Kaplan Meier as they cross implies no
+#significant difference in survival between 2 groups - as the insignificant p values
+#was saying for Weibull regression models
+```
+
+## Part c:
+Performing the same model selection criteria using the Cox proportional hazards model starting with the hierarchical model with the three way interaction between age, weight and length (and thus all lower order terms) my final model is the null model with a AIC of **128.00** compared to the initial models AIC of **135.44**. Thus, using my final model none of the covariates age, weight and length affect the survival of the ducks and when fitting a model with all 3 covariates, none are significant at $\alpha=0.05$. Therefore the survival of the ducks does not depend on its age, weight or length using the provided data.
+```{r, include=F}
+#Fitting cox models
+duck.cox.all <- coxph(Surv(Time,event=Observed)~Age*Weight*Length,data=duck.data)
+AIC(duck.cox.all)
+duck.cox.final.1 <- step(duck.cox.all,data=duck.data,direction = "backward",trace = T)
+AIC(duck.cox.final.1)
+
+duck.cox.int2 <- coxph(Surv(Time,event=Observed) ~ Age*Weight+Weight*Length+Age*Length, data = duck.data)
+duck.cox.final.2 <- step(duck.cox.int2,data=duck.data,direction = "backward",trace = T)
+AIC(duck.cox.final.2)
+final.cox <- duck.cox.final.2
+
+summary(coxph(Surv(Time,event=Observed) ~ Age+Weight+Length, data = duck.data))
+```
+
+## Part d:
+Plotting the estimated survivor function for a one year old duck with weight 1000g and length 250cm using my prefered models for part a and c is the survivor function for any duck as both models don't include the covariate age, weight or length. The corresponding plot is below.
+```{r,echo=F,fig.align='center',fig.width=10,fig.height=5}
+plot(survfit(final.cox),conf.int = F,col="red",
+     xlab="Time (days)",
+     ylab="Survival probabilty",
+     main = "Estimated survival of ducks using \n Weibull and Cox regression")
+curve(expr = exp(-(beta_0*x)^alpha), from = 0, to = 63, add = TRUE, col="blue")
+legend("topright", legend = c("Cox", "Weibull"),
+col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
+```
+# Question 3:
+## Part a:
+```{r,include=F}
+## Question 3 
+mortality.data <- read.csv("mortality.csv",header=T)
+#Part a - calculating crude central mortality rates
+mortality.data<- mortality.data%>%
+  mutate(cc.mort.rate.male=Male.deaths/Male.exposed,
+         cc.mort.rate.female=Female.deaths/Female.exposed)%>%
+  rename("Age"="Age..x.")
+
+plot.mort.data.female <- mortality.data%>%
+  dplyr::select(Age,cc.mort.rate.female)%>%
+  mutate(gender="Female")%>%
+  rename("cc.mort.rate"="cc.mort.rate.female")
+
+plot.mort.data.male <- mortality.data%>%
+  dplyr::select(Age,cc.mort.rate.male)%>%
+  mutate(gender="Male")%>%
+  rename("cc.mort.rate"="cc.mort.rate.male")
+
+plot.mort.data <- rbind(plot.mort.data.female,plot.mort.data.male)%>%
+  mutate(log.cc.mort.rate=log(cc.mort.rate))
+```
+
+Calculating the crude central mortality rates ($m_{x}$) for male and female pensioners and plotting it on the log scale gives the below graph. In it we can see that $log(m_{x})$ for males is higher than that of females for all ages with the exception of ages 63, 95, 96, 102. Thus, overall this graph suggests that $m_{x}$ is higher for males than females.
+```{r,echo=F,fig.align='center',fig.width=10,fig.height=4}
+#Plotting
+ggplot(aes(x=Age,y=log.cc.mort.rate,colour=gender),data=plot.mort.data)+
+  geom_point()+
+  xlab("Age (years)")+
+  ylab("Estimated log crude central mortality rate")+
+  ggtitle("Log crude central mortality rates for members of large pension scheme")
+```
+
+## Part b:
+Calculating $q_{x}$ for males and female using both the assumption of constant force of mortality and uniform distribution of deaths within each year of age gives the corresponding life tables (with $l_{60}=100000$).
