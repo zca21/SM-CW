@@ -155,26 +155,24 @@ AIC(duck.wb.simple)
 summary(duck.wb.simple)
 ```
 #### Part b:
-A Weibull model assumes that the change in hazard rate is linear with time. MAYBE TALK ABOUT THIS ASSUMPTION?. Comparing the Weibull estimate with the Kaplan Meier estimate of survival gives the below plot. The plot shows that the Weibull estimate is consistent with the Kaplan Meier estimate thus the Weibull distribution is a reasonable model. (say somethign about KM being non-parametric thus can "trust")
+To check if a Weibull model may be reasonable I plotted $log(\hat{H}(t))$ against $log(t)$ and checked that $log(\hat{H}(t))$ is linear with $log(t)$ with gradient equal to $\alpha$ the shape parameter of the estimated Weibull model. In the below graph the red line has intercept -5.5 and gradient 1.21 (the estimated shape parameter is $\hat{\alpha}=1.211$ in my chosen final Weibull model from part a). The line is a good approximation of the points thus a Weibull distribution is a reasonable model.
+
 ```{r,echo=F,fig.align='center',fig.width=10,fig.height=5}
-#Part b - Is Weibull distribution a reasonable model?
-#Note that Weibull model assumes that hazard rate changes linearly across time (change in hazard is linear)
-#This seem reasonable (ducks can live up to 20 years) so no change in there survival for 63 days for 1 year old for 0 year old may expect some change but
-#as insignificant from year 1 no issue with this assumption
-#Use comparison to Kaplan Meier plot for this
-
-duck.km <- survfit(Surv(Time,event=Observed) ~ 1, data=duck.data)
-plot(duck.km, ylab= "Survival function", xlab="Time (days)", col = "red",conf.int = F,
-     main = "Estimated Kaplan Meier and Weibull survival curves \n for duck survival data")
-
+#calculating NA estimates
+duck.na <- survfit(Surv(Time,event=Observed) ~ 1, data=duck.data,type = "fleming")
 alpha <- 1/final.wb$scale
 beta_0 <- exp(-final.wb$coefficients[1])
-curve(expr = exp(-(beta_0*x)^alpha), from = 0, to = 63, add = TRUE, col="blue")
-legend("topright", legend = c("Kaplan Meier", "Weibull"),
-col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
-#Looking at the curve it looks like a good approximation of the Kaplan Meier estimate
-#Thus Weibull distribution is a reasonable model 
+
+wb.check.plot.data <- data.frame("time"=duck.na$time,"cumhaz"=duck.na$cumhaz)
+ggplot(aes(y=log(cumhaz),x=log(time)),data=wb.check.plot.data)+
+  geom_point()+
+  geom_abline(intercept = -5.5, slope = 1.21,col="red")+
+  ylab("log of cumulative hazard")+
+  xlab("log of time (time in days)")+
+  ggtitle("Checking Weibull assumption with line y=1.21x-5.5")+
+  geom_text(x=1.8, y=-2.8, label="y=1.21x-5.5",cex=5, col="red")
 ```
+
 
 ```{r, include=F}
 duck.age.km <- survfit(Surv(Time,event=Observed) ~ Age, data=duck.data)

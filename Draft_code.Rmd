@@ -96,7 +96,25 @@ c( 0.319, 0.697)
 c(0.0340, 0.621)
 ```
 
+```{r,include=F}
+#Part b - Is Weibull distribution a reasonable model?
+#Note that Weibull model assumes that hazard rate changes linearly across time (change in hazard is linear)
+#This seem reasonable (ducks can live up to 20 years) so no change in there survival for 63 days for 1 year old for 0 year old may expect some change but
+#as insignificant from year 1 no issue with this assumption
+#Use comparison to Kaplan Meier plot for this
 
+duck.km <- survfit(Surv(Time,event=Observed) ~ 1, data=duck.data)
+plot(duck.km, ylab= "Survival function", xlab="Time (days)", col = "red",conf.int = F,
+     main = "Estimated Kaplan Meier and Weibull survival curves \n for duck survival data")
+
+alpha <- 1/final.wb$scale
+beta_0 <- exp(-final.wb$coefficients[1])
+curve(expr = exp(-(beta_0*x)^alpha), from = 0, to = 63, add = TRUE, col="blue")
+legend("topright", legend = c("Kaplan Meier", "Weibull"),
+col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
+#Looking at the curve it looks like a good approximation of the Kaplan Meier estimate
+#Thus Weibull distribution is a reasonable model 
+```
 
 
 ```{r}
@@ -333,7 +351,7 @@ ELT17.female <- ELT17[,c(1,5,6,7)] %>%
          ex=as.numeric(ex),
          Age=as.numeric(Age))
 
-#Formal test (jusing unifrom dist of deaths to calculate mxs )
+#Formal test (using uniform dist of deaths to calculate mxs )
 
 #For males
 ELT17.male <- ELT17.male%>%
