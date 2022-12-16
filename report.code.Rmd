@@ -25,7 +25,7 @@ library(readxl)
 ```
 # Question 1:
 \vspace{-5truemm}
-## Part a:
+#### Part a:
 Producing Kaplan Meier estimates of 38 patients with lymphocytic non-Hodgkins lymphoma who have been classified into 2 groups, symptomatic(n=10) and asymptomatic(n=28) gives the below plot.
 ```{r,include=F}
 #Data explortation
@@ -42,7 +42,7 @@ summary(lymp.km)
 survdiff(Surv(time,event=cens) ~ symp, data=lymp.data)
 ```
 
-```{r,echo=F,fig.align='center',fig.width=10,fig.height=4}
+```{r,echo=F,fig.align='center',fig.width=10,fig.height=5}
 #Producing KM plot
 plot(lymp.km,
      col=c("red","blue"),
@@ -54,7 +54,7 @@ col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
 ```
 Viewing the plots it is clear that the asymptomatic group has a higher survival probability than the symptomatic group for all time, thus those in asymptomatic group have a longer survival time than those in the symptomatic group (on average). Furthermore, performing a log-rank test we attain a Chi-Squared statistic of 8.7 with 1 degree of freedom which corresponds to a significant p-value of **0.003** thus we reject the null hypothesis of no difference in survival between the groups. Therefore, we have evidence that there is a statistically significant difference of survival between the groups, backing up the analysis of the Kaplan Meier plot.
 
-## Part b:
+#### Part b:
 ```{r,include=F}
 #Finding CI (95%)
 lymp.95 <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data,conf.int=0.95)
@@ -69,7 +69,7 @@ c(0.0156, 0.642)
 ```
 For the asymptomatic and symptomatic groups the 95% confidence interval of the Kaplan Meier estimates of 6 year survival is [**0.309**, **0.690**] and [**0.0156**, **0.642**] respectively. 
 
-## Part c:
+#### Part c:
 ```{r,include=F}
 summary(lymp.km)
 #For Asymptomatic time is some point greater than 301 weeks (study ended)
@@ -116,7 +116,7 @@ Viewing the survival estimates via plots they are very similar. The Nelson-Aalen
 
 
 
-## Part e:
+#### Part e:
 ```{r, include=F}
 lymp.95.na <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data,conf.int=0.95,type="fleming")
 summary(lymp.95.na)
@@ -129,10 +129,8 @@ c(0.0340, 0.621)
 ```
 For the asymptomatic and symptomatic groups the 95% confidence interval of the Nelson-Aalen estimates of 6 year survival is [**0.319**, **0.697**] and [**0.0340**, **0.621**] respectively. 
 
-\newpage
-
 # Question 2:
-## Part a:
+#### Part a:
 Fitting Weibull regression models to the duck survival time data I used AIC as my selection criteria and started with a model including all possible covariates and removed variables that lead to a new model with a smaller AIC. Starting with a hierarchical model with the three way interaction between age, weight and length (and thus all lower order terms), applying my model selection criteria, my final model was the null model with an AIC of **209.97** compared to an AIC of **216.08** for the initial model. This final model implies that all the covariates (age, weight and length) have no effect on the survival of the ducks. Moreover, creating a model with the covarites age, weight and length all are insignificant (had a p-value greater than 0.05). Thus, using the data provided I conclude that the survival of the ducks does not depend on explanatory variables age, weight and length.
 
 ```{r, include=F}
@@ -156,7 +154,7 @@ AIC(duck.wb.simple)
 #Note that no interaction model has AIC of 213.5725
 summary(duck.wb.simple)
 ```
-## Part b:
+#### Part b:
 A Weibull model assumes that the change in hazard rate is linear with time. MAYBE TALK ABOUT THIS ASSUMPTION?. Comparing the Weibull estimate with the Kaplan Meier estimate of survival gives the below plot. The plot shows that the Weibull estimate is consistent with the Kaplan Meier estimate thus the Weibull distribution is a reasonable model. (say somethign about KM being non-parametric thus can "trust")
 ```{r,echo=F,fig.align='center',fig.width=10,fig.height=5}
 #Part b - Is Weibull distribution a reasonable model?
@@ -191,7 +189,7 @@ col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
 #was saying for Weibull regression models
 ```
 
-## Part c:
+#### Part c:
 Performing the same model selection criteria using the Cox proportional hazards model starting with the hierarchical model with the three way interaction between age, weight and length (and thus all lower order terms) my final model is the null model with a AIC of **128.00** compared to the initial models AIC of **135.44**. Thus, using my final model none of the covariates age, weight and length affect the survival of the ducks and when fitting a model with all 3 covariates, none are significant at $\alpha=0.05$. Therefore the survival of the ducks does not depend on its age, weight or length using the provided data.
 ```{r, include=F}
 #Fitting cox models
@@ -208,7 +206,7 @@ final.cox <- duck.cox.final.2
 summary(coxph(Surv(Time,event=Observed) ~ Age+Weight+Length, data = duck.data))
 ```
 
-## Part d:
+#### Part d:
 Plotting the estimated survivor function for a one year old duck with weight 1000g and length 250cm using my prefered models for part a and c is the survivor function for any duck as both models don't include the covariate age, weight or length. The corresponding plot is below.
 ```{r,echo=F,fig.align='center',fig.width=10,fig.height=5}
 plot(survfit(final.cox),conf.int = F,col="red",
@@ -220,7 +218,7 @@ legend("topright", legend = c("Cox", "Weibull"),
 col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
 ```
 # Question 3:
-## Part a:
+#### Part a:
 ```{r,include=F}
 ## Question 3 
 mortality.data <- read.csv("mortality.csv",header=T)
@@ -254,5 +252,172 @@ ggplot(aes(x=Age,y=log.cc.mort.rate,colour=gender),data=plot.mort.data)+
   ggtitle("Log crude central mortality rates for members of large pension scheme")
 ```
 
-## Part b:
+#### Part b:
 Calculating $q_{x}$ for males and female using both the assumption of constant force of mortality and uniform distribution of deaths within each year of age gives the corresponding life tables (with $l_{60}=100000$).
+
+```{r,include=F}
+#Part b - calculating q_{x} 
+
+#(i) Under the assumption of a constant force of mortality 
+mortality.data <- mortality.data %>%
+  mutate(qx.const.male = 1-exp(-cc.mort.rate.male),
+         qx.const.female = 1-exp(-cc.mort.rate.female),
+         qx.unif.male = cc.mort.rate.male/(1+0.5*cc.mort.rate.male),
+         qx.unif.female = cc.mort.rate.female/(1+0.5*cc.mort.rate.female))
+
+
+#under uniform dist of death for male
+lx.unif.male <- lx.unif.female <- NULL
+lx.unif.male[1] <- lx.unif.female[1] <- 100000
+for (i in 1:42){
+lx.unif.male[i+1] <- lx.unif.male[i]*(1-mortality.data$qx.unif.male[i])
+lx.unif.female[i+1] <- lx.unif.female[i]*(1-mortality.data$qx.unif.female[i])
+}
+
+#Under constant force of mortality
+lx.const.male <- lx.const.female <- NULL
+lx.const.male[1] <- lx.const.female[1] <- 100000
+for (i in 1:42){
+lx.const.male[i+1] <- lx.const.male[i]*(1-mortality.data$qx.const.male[i])
+lx.const.female[i+1] <- lx.const.female[i]*(1-mortality.data$qx.const.female[i])
+}
+
+#Creating table of results
+table.qx <- data.frame("Age"=seq(from=60,to=102,by=1),
+                        "lx.unif.male"=lx.unif.male,
+                        "lx.const.male"=lx.const.male,
+                        "lx.unif.female"=lx.unif.female,
+                        "lx.const.female"=lx.const.female)%>%
+  filter(Age %in% c(60,65,70,75,80,85,90,95,100))
+
+```
+
+```{r,include=F}
+#creating lifetable not had to screenshot (then include as image) as the format wasn't working when knitting directly 
+knitr::kable(table.qx,digits=2,caption = "Life table",col.names = c("Age","$l_{x}$ unif","$l_{x}$ const","$l_{x}$ unif","$l_{x}$ const"))%>%
+  row_spec(0,bold=T)%>%
+  add_header_above(c(" "=1,"Male"=2,"Female"=2))%>%
+  footnote(number = c("unif means the values have been calculated using a uniform distribution of deaths within each year assumption",
+                      "const means the values have been calculated using constant force of mortality within each year assumption"))%>%
+  kable_styling(position = "center",latex_options = "HOLD_position",full_width=F)
+```
+```{r,echo=F,fig.align='center',out.width="300px"}
+knitr::include_graphics("lifetable.png")
+```
+
+#### Part c:
+
+```{r, include=F}
+#curate life expectancies
+sum(lx.unif.male[2:43])/100000
+sum(lx.unif.female[2:43])/100000
+
+#complete (using assumption of uniform death)
+sum(lx.unif.male[2:43])/100000 +0.5
+sum(lx.unif.female[2:43])/100000 +0.5
+```
+
+To calculate the curtate life expectancy ($e_{x}$) I used the formula $e_{x} = \frac{1}{l_{x}}\sum_{k=1}^{\infty}l_{x+k}$ then using the assumption of of a uniform distribution of deaths within each year the complete life expectancy ($\mathring{e_{x}}$) is $\mathring{e_{x}=e_{x}+0.5}$. Thus using the calculated life table results above for the uniform distribution assumption the complete and curtate life expectancies for males aged 60 are **22.1** and **21.6** years respectively and for females aged 60 are **24.9** and **25.4** years respectively.
+
+#### Part d:
+```{r,include=F}
+#Part d
+# comparing to whole population
+ELT17 <- read_excel("ELT17.xls")
+
+ELT17.male <- ELT17[,1:4] %>% 
+  filter(Age %in% c(0,10,20,30,40,50,60,70,80,90,100))%>%
+  rename("lx"="Males","qx"="...3","ex"="...4")%>%
+  mutate(lx=as.numeric(lx),
+         qx=as.numeric(qx),
+         ex=as.numeric(ex),
+         Age=as.numeric(Age))
+
+ELT17.female <- ELT17[,c(1,5,6,7)] %>% 
+  filter(Age %in% c(0,10,20,30,40,50,60,70,80,90,100))%>%
+  rename("lx"="Females","qx"="...6","ex"="...7")%>%
+  mutate(lx=as.numeric(lx),
+         qx=as.numeric(qx),
+         ex=as.numeric(ex),
+         Age=as.numeric(Age))
+
+#Formal test (using uniform dist of deaths to calculate mxs )
+
+#For males
+ELT17.male <- ELT17.male%>%
+  mutate(mxs = qx/(1-0.5*qx))
+
+mort.male.comp <- mortality.data%>%
+  filter(Age %in% c(60,70,80,90,100))%>%
+  dplyr::select(Male.exposed,Male.deaths,Age)
+
+test.data.male <- inner_join(mort.male.comp,ELT17.male,by="Age")%>%
+  mutate(test.stat = ((Male.deaths-Male.exposed*mxs)^2)/Male.exposed*mxs,
+         checking.reliable = Male.exposed*mxs)
+
+X2.male <- sum(test.data.male$test.stat)
+#calculating p-value
+1-pchisq(X2.male,df=5)
+#Not significant (p- value is 1 (3 d.p.)) therefore fail to reject null thus for males mx=mxs 
+#(death rates the same in this insured population compared to whole population of England and Wales)
+
+#For females
+ELT17.female <- ELT17.female%>%
+  mutate(mxs = qx/(1-0.5*qx))
+
+mort.female.comp <- mortality.data%>%
+  filter(Age %in% c(60,70,80,90,100))%>%
+  dplyr::select(Female.exposed,Female.deaths,Age)
+
+test.data.female <- inner_join(mort.female.comp,ELT17.female,by="Age")%>%
+  mutate(test.stat = ((Female.deaths-Female.exposed*mxs)^2)/Female.exposed*mxs,
+         checking.reliable = Female.exposed*mxs)
+
+X2.female <- sum(test.data.female$test.stat)
+#calculating p-value
+1-pchisq(X2.female,df=5)
+#Not significant (p-value is 0.99) therefore fail to reject null thus for females mx=mxs 
+#(death rates the same in this insured population compared to whole population of England and Wales)
+```
+
+To compare the deaths rates in the insured population to the whole population of England and Wales I used the chi-squared test. For both males and females all values of $E_{x}^{C}m_{x}^{S}$ were greater than 1 and for males 1 value (20%) was less than 5 (for the 100 age $E_{100}^{C}m_{100}^{S}=1.55$) thus for males the chi-squared test conclusion is reliable. For females 2 values (40%) were less than 5 ($E_{60}^{C}m_{60}^{S}=3.90$ and $E_{100}^{C}m_{100}^{S}=3.22$) thus the conclusions from the chi-squared test are less reliable. For males the chi-squared test statistic was 0.042 corresponding to a non-significant p-value of **1** (3 d.p.) and for females the chi-squared test statistic was 0.533 corresponding to a non-significant p-value of **0.991** (3 d.p.). Therefore, for both males and females there is no evidence the death rates are different between the insured population and the whole population of England and Wales.
+
+#### Part e:
+```{r,include=F}
+#Part e - use a Gompertz log-linear model to produce a set of graduated central mortality rates from the crude mortality data
+
+#From crude mortality data fitting gompertz regression model
+grad.gompertz <- glm(Male.deaths ~ Age+offset(log(Male.exposed)),family = poisson(link=log),data=mortality.data)
+summary(grad.gompertz)
+
+#calculating gompertz estimated mx
+gomp.mx <- data.frame("Age"=seq(from=60,to=102,by=1),
+                      "mx"=exp(grad.gompertz$coefficients[1]+seq(from=60,to=102,by=1)*grad.gompertz$coefficients[2]),
+                      "type"=rep("Gompertz",43))
+#sorting data to create plot
+comp.mort.plot.data <- mortality.data%>%
+  dplyr::select(Age,cc.mort.rate.male)%>%
+  rename("mx"="cc.mort.rate.male")%>%
+  mutate("type"="Crude")
+
+comp.mort.plot.data <- rbind(gomp.mx,comp.mort.plot.data)%>%
+  mutate(log.mx=log(mx),
+         shape2=c(rep(16,43),rep(17,43)))
+```
+Using a Gompertz log-linear model to produce a set of graduated central mortality rates from the crude mortality data and then plotting both it and the crude  central mortality rates on the log scale gives the below graph. It shows a good fit of the graduated rates to the crude rates as the graduated rates consistently close to the crude rates on the log scale.
+```{r,echo=F,fig.align='center',fig.width=10,fig.height=4}
+ggplot(aes(x=Age,y=log.mx,colour=type),data=comp.mort.plot.data)+
+  geom_point(shape=comp.mort.plot.data$shape2)+
+  geom_line()+
+  xlab("Age (years)")+
+  ylab(expression("log m"[x]))+
+  ggtitle("Comparing crude and graduated central mortality rates for male population")+
+  guides(color = guide_legend(
+    override.aes=list(shape = c(17,16))))
+```
+
+
+
+
+
+
