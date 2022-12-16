@@ -1,0 +1,127 @@
+---
+title: "Survival Models (MATH6143) Coursework"
+author: "Student ID: 34273638"
+geometry: margin = 2cm
+output:
+  pdf_document: default
+header-includes:
+  - \usepackage{wrapfig}
+  - \usepackage{lipsum}
+  - \usepackage{setspace}
+  - \usepackage{titlesec}
+  - \titlespacing{\title}{0pt}{\parskip}{-\parskip}
+---
+```{r,echo=F,message=F}
+#Setting up enviroment
+setwd("~/Desktop/Survival Models/CW/SM-CW")
+lymp.data <- read.csv("lymphoma.csv",header=T)
+duck.data <- read.table("duck.txt",header = T)
+mortality.data <- read.csv("mortality.csv",header=T)
+library(survival) #basic functions for survival modelling
+library(survminer) # package to produce much nicer visualisations
+library(tidyverse)
+library(kableExtra)
+library(readxl)
+```
+# Question 1:
+\vspace{-5truemm}
+## Part a:
+Producing Kaplan Meier estimates of 38 patients with lymphocytic non-Hodgkins lymphoma who have been classified into 2 groups, symptomatic(n=10) and asymptomatic(n=28) gives the below plot.
+```{r,include=F}
+#Data explortation
+lymp.data%>%
+  group_by(symp)%>%
+  summarise(n=n())
+
+#Computing Kaplan Meier estimate of survivor function 
+lymp.km <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data)
+
+summary(lymp.km)
+
+#using log rank test
+survdiff(Surv(time,event=cens) ~ symp, data=lymp.data)
+```
+
+```{r,echo=F,fig.align='center'}
+#Producing KM plot
+plot(lymp.km,
+     col=c("red","blue"),
+     xlab = "Time (weeks)",
+     ylab = "Survival probability",
+     main = "Kaplan Meier survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma")
+legend("topright", legend = c("Asymptomatic", "Symptomatic"),
+col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
+```
+Viewing the plots it is clear that the asymptomatic group has a higher survival probability than the symptomatic group for all time, thus those in asymptomatic group have a longer survival time than those in the symptomatic group (on average). Furthermore, performing a log-rank test we attain a Chi-Squared statistic of 8.7 with 1 degree of freedom which corresponds to a significant p-value of **0.003** thus we reject the null hypothesis of no difference in survival between the groups. Therefore, we have evidence that there is a statistically significant difference of survival between the groups, backing up the analysis of the Kaplan Meier plot.
+
+## Part b:
+```{r,include=F}
+#Finding CI (95%)
+lymp.95 <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data,conf.int=0.95)
+summary(lymp.95)
+#Using assumption that there are 52 weeks in a year, 6 year survival happens at week 312
+#Reading off 95% confidence interval estimate at 312 weeks gives thew following 95% confidence intervals for the groups
+
+#Asymptomatic (t>=301)
+c(0.309, 0.690)
+#Symptomatic (t>=281)
+c(0.0156, 0.642)
+```
+For the asymptomatic and symptomatic groups the 95% confidence interval of the Kaplan Meier estimates of 6 year survival is [**0.309**, **0.690**] and [**0.0156**, **0.642**] respectively. 
+
+## Part c:
+```{r,include=F}
+summary(lymp.km)
+#For Asymptomatic time is some point greater than 301 weeks (study ended)
+#For Symptomatic time is 276 weeks (drops from 0.3 to 0.2)
+```
+For the symptomatic and asymptomatic groups the estimated time the survival probability is below 30% is 276 weeks and some time greater than 388 weeks respectively. As the asymptomatic group had a survival probability greater than 30% (**46.5%**) at the end of study (388 weeks) I can only specify the time survival probability is below 30% is some time after this.
+
+## Part d:
+```{r,include=F}
+#Part d
+lymp.na <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data,type = "fleming")
+
+#Estimates are very similar, Nelson-Aalen estimates have survival portability shifted up (increased) slightly compared to Kaplan Meier
+# estimates and this shift (increase in survival probability) is greater for the symptomatic group
+summary(lymp.km)
+summary(lymp.na)
+#Survival estimates similar as d_{j}`/r_{j} small for all time for asymptomatic group (thus due to taylor approx they are approx equal)
+#Survival estimates similar for symptomatic group too except at the end (due to small number at risk left) thus d_{j}`/r_{j} is not small
+#so approximation is bad which is why the N-A estimates are more different for this group 
+
+```
+
+```{r,echo=F,fig.align='center'}
+par(mfrow = c(1,2))
+plot(lymp.na,
+     col=c("red","blue"),
+     xlab = "Time (weeks)",
+     ylab = "Survival probability",
+     main = "Nelson-Aalen survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma",
+     cex.main=0.8)
+plot(lymp.km,
+     col=c("red","blue"),
+     xlab = "Time (weeks)",
+     ylab = "Survival probability",
+     main = "Kaplan Meier survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma",
+     cex.main=0.8)
+```
+Viewing the survival estimates via plots they are very similar. The Nelson-Aalen estimates have a survival portability shifted up (increased) slightly compared to Kaplan Meier estimates and this shift (increase in survival probability) is greater for the symptomatic group. The survival estimates are similar for the asymptomatic group as the $\frac{d_{j}`}{r_{j}}$ is small for all times with largest value at time with a corresponding value of . Due to this small value ... is approximately equal to by taylor expasion. However for the symptomatic group as the sample is smaller for this subgroup the value of $\frac{d_{j}`}{r_{j}}$ is larger with ... this gives the larger discrepancy of survival in the later times seen in the table below.
+
+## Part e:
+```{r, include=F}
+lymp.95.na <- survfit(Surv(time,event=cens) ~ symp, data=lymp.data,conf.int=0.95,type="fleming")
+summary(lymp.95.na)
+#95% CI of probability of 6-year (312 week) survival for each group
+
+#Asymptomatic (t>=301)
+c( 0.319, 0.697)
+#Symptomatic (t>=281)
+c(0.0340, 0.621)
+```
+For the asymptomatic and symptomatic groups the 95% confidence interval of the Nelson-Aalen estimates of 6 year survival is [**0.319**, **0.697**] and [**0.0340**, **0.621**] respectively. 
+
+\newpage
+
+# Question 2:
