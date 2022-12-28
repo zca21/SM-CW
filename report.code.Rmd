@@ -52,7 +52,7 @@ plot(lymp.km,
 legend("topright", legend = c("Asymptomatic", "Symptomatic"),
 col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
 ```
-Viewing the plot, it is clear that the asymptomatic group has a higher survival probability than the symptomatic group for all time, thus those in asymptomatic group have a longer survival time than those in the symptomatic group (on average). Furthermore, performing a log-rank test we attain a Chi-Squared statistic of 8.7 with 1 degree of freedom which corresponds to a significant p-value of **0.003** thus we reject the null hypothesis of no difference in survival between the groups. Therefore, we have evidence that there is a statistically significant difference of survival between the groups, backing up the analysis of the Kaplan Meier plot.
+Viewing the plot, it is clear that the asymptomatic group has a higher survival probability than the symptomatic group for all time, thus those in the asymptomatic group have a longer survival time than those in the symptomatic group on average. Furthermore, performing a log-rank test we attain a Chi-Squared statistic of 8.7 with 1 degree of freedom which corresponds to a significant p-value of **0.003** thus we reject the null hypothesis of no difference in survival between the groups. Therefore, we have evidence that there is a statistically significant difference of survival between the groups, backing up the analysis of the Kaplan Meier plot.
 
 #### Part b:
 ```{r,include=F}
@@ -67,7 +67,7 @@ c(0.309, 0.690)
 #Symptomatic (t>=281)
 c(0.0156, 0.642)
 ```
-For the asymptomatic and symptomatic groups the 95% confidence interval of the Kaplan Meier estimates of 6 year survival is [**0.309**, **0.690**] and [**0.0156**, **0.642**] respectively. 
+For the asymptomatic and symptomatic groups the 95% confidence interval of the Kaplan Meier estimates of 6 year survival (taken as 312 week survival) is [**0.309**, **0.690**] and [**0.0156**, **0.642**] respectively. 
 
 #### Part c:
 ```{r,include=F}
@@ -113,7 +113,7 @@ plot(lymp.km,
 legend("topright", legend = c("Asymptomatic", "Symptomatic"),
 col = c("red", "blue"), lty = c(1, 1), cex = 0.5)
 ```
-Viewing the survival estimates via plots they appear very similar for the asymptomatic group, for the symptomatic group the Nelson-Aalen estimates diverge slightly in the positive direction from the Kaplan Meier estimates as time increases (survival probability is larger for Nelson-Aalen estimates later in the study compared to the Kaplan Meier estimates). In more detail, the survival estimates are very similar for the asymptomatic group as the value of $\frac{d_{j}`}{r_{j}}$ (where $d_{j}$ is number of events at observed event time $t_{j}$ and $r_{j}$ is number at risk at $t_{j}$) is small for all observed event times $t_{j}$ with the largest value of $\frac{1}{13}$ at event time 301 weeks. Thus by Taylor expansion the survival estimates are approximately equal ($\hat{S}_{NA}(t) \approx \hat{S}_{KM}(t)$) for the asymptomatic group. This is what also causes the larger differences in estimates for the symptomatic group as the sample size is smaller for this subgroup causing the value of $\frac{d_{j}`}{r_{j}}$ to be larger, with the largest value of 0.5 at event time 281 weeks. Thus, this larger value of $\frac{d_{j}`}{r_{j}}$  causes the larger difference in survival estimates observed due to the approximation from Taylor expansion being less reliable.
+Viewing the survival estimates via plots they appear very similar for the asymptomatic group, for the symptomatic group the Nelson-Aalen estimates diverge slightly in the positive direction from the Kaplan Meier estimates as time increases (survival probability is larger for Nelson-Aalen estimates later in the study compared to the Kaplan Meier estimates). In more detail, the survival estimates are very similar for the asymptomatic group as the value of $\frac{d_{j}`}{r_{j}}$ (where $d_{j}$ is number of events at observed event time $t_{j}$ and $r_{j}$ is number at risk at $t_{j}$) is small for all observed event times $t_{j}$ with the largest value of $\frac{1}{13}$ at event time 301 weeks. Thus by Taylor expansion the survival estimates are approximately equal ($\hat{S}_{NA}(t) \approx \hat{S}_{KM}(t)$) for the asymptomatic group. This is what also causes the larger differences in estimates for the symptomatic group as the sample size is smaller for this subgroup causing the value of $\frac{d_{j}`}{r_{j}}$ to be larger, with the largest value of 0.5 at event time 281 weeks. Thus, this larger value of $\frac{d_{j}`}{r_{j}}$  at later event times causes the larger difference in survival estimates observed due to the approximation from Taylor expansion being less reliable.
 
 
 #### Part e:
@@ -131,7 +131,7 @@ For the asymptomatic and symptomatic groups the 95% confidence interval of the N
 
 # Question 2:
 #### Part a:
-Fitting Weibull regression models to the duck survival time data I used AIC as my model selection criteria and started with a model including all possible covariates and then proceeded remove variables that lead to a new model with a smaller AIC. Starting with a hierarchical model with the three way interaction between age, weight and length (and thus all lower order terms), applying my model selection criteria, my final model was the null model with an AIC of **209.97** compared to an AIC of **216.08** for the initial model. This final model implies that all the covariates (age, weight and length) have no effect on the survival of the ducks. Moreover, creating a model with the covarites age, weight and length, all three covariates are insignificant (had a p-value greater than 0.05). Thus, using the data provided I conclude that the survival of the ducks does not depend on explanatory variables age, weight and length.
+Fitting Weibull regression models to the duck survival time data I used AIC as my model selection criteria and started with a model including all possible covariates and then proceeded to remove variables that lead to a model with a lower AIC. Starting with a hierarchical model with the three way interaction between age, weight and length (and thus all lower order terms), applying my model selection criteria, my final model was the null model with an AIC of **209.97** compared to an AIC of **216.08** for the initial model. This final model implies that all the covariates (age, weight and length) have no effect on the survival of the ducks. Moreover, creating a model with the covarites age, weight and length, all three covariates were insignificant (had a p-value greater than 0.05). Thus, using the data provided I conclude that the survival of the ducks does not depend on any of the explanatory variables age, weight or length.
 
 ```{r, include=F}
 #Using AIC (information criteria for model selection we start with full model and perform backward selection)
@@ -188,7 +188,7 @@ col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
 ```
 
 #### Part c:
-Using the same model selection criteria of AIC using the Cox proportional hazards model starting with the hierarchical model with the three way interaction between age, weight and length (and thus all lower order terms) my final model is the null model with a AIC of **128.00** compared to the initial models AIC of **135.44**. Thus, using my final model none of the covariates age, weight and length affect the survival of the ducks and when fitting a model with all 3 covariates, none are significant at $\alpha=0.05$. Therefore the survival of the ducks does not depend on its age, weight or length using the provided data and a Cox proportional hazards model.
+Using the same model selection criteria of AIC using the Cox proportional hazards model starting with the hierarchical model with the three way interaction between age, weight and length (and thus all lower order terms) my final model is the null model with a AIC of **128.00** compared to the initial models AIC of **135.44**. Thus, using my final model none of the covariates age, weight and length affect the survival of the ducks and when fitting a model with all 3 covariates, none are significant at $\alpha=0.05$. Therefore using this model the survival of the ducks does not depend on their age, weight or length using the provided data.
 ```{r, include=F}
 #Fitting cox models
 duck.cox.all <- coxph(Surv(Time,event=Observed)~Age*Weight*Length,data=duck.data)
@@ -205,7 +205,7 @@ summary(coxph(Surv(Time,event=Observed) ~ Age+Weight+Length, data = duck.data))
 ```
 
 #### Part d:
-Plotting the estimated survivor function for a one year old duck with weight 1000g and length 250cm using my preferred models for part a and c is the same survivor function for any other duck with different weight, length and age (within the values used to produce my model, so not extrapolating) as both models don't include the covariates age, weight or length. The corresponding plot is below.
+Plotting the estimated survivor function for a one year old duck with a weight of 1000g and a length of 250cm using my preferred models for part a and c gives the corresponding plot below. I note that this is the same survivor function as that for any other duck with a different weight, length or age (within the values of the dataset used to produce my model, as may not be able to extrapolate) as both models don't include the covariates age, weight or length.
 ```{r,echo=F,fig.align='center',fig.width=10,fig.height=5}
 plot(survfit(final.cox),conf.int = F,col="red",
      xlab="Time (days)",
@@ -240,7 +240,7 @@ plot.mort.data <- rbind(plot.mort.data.female,plot.mort.data.male)%>%
   mutate(log.cc.mort.rate=log(cc.mort.rate))
 ```
 
-Calculating the crude central mortality rates ($m_{x}$) for male and female pensioners and plotting it on the log scale gives the below graph. In it we can see that $log(m_{x})$ for males is higher than that of females for all ages with the exception of ages 63, 95, 96, 102. Thus, overall this graph suggests that $m_{x}$, the crude central mortality rate is higher for male pensioners than female pensioners.
+Calculating the crude central mortality rates $m_{x}$ for male and female pensioners using $\hat{m_{x}}=\frac{D_{x}}{E_{x}^{C}}$ ($D_{x}$ the number of deaths at age $x$ and $E_{x}^{C}$ the central exposed risk at age $x$) and plotting it on the log scale gives the below graph. In it we can see that $log(m_{x})$ is higher for males than for females at all ages with the exception of ages 63, 95, 96, 102. Thus, overall this graph suggests that $log(m_{x})$ and thus $m_{x}$, the crude central mortality rate is higher for male pensioners than female pensioners.
 ```{r,echo=F,fig.align='center',fig.width=10,fig.height=4}
 #Plotting
 ggplot(aes(x=Age,y=log.cc.mort.rate,colour=gender),data=plot.mort.data)+
@@ -251,7 +251,7 @@ ggplot(aes(x=Age,y=log.cc.mort.rate,colour=gender),data=plot.mort.data)+
 ```
 
 #### Part b:
-Calculating $q_{x}$ for males and female using both the assumption of constant force of mortality and uniform distribution of deaths within each year of age gives the corresponding life tables (with $l_{60}=100000$).
+Calculating $q_{x}$ for males and female using both the assumption of constant force of mortality and uniform distribution of deaths within each year of age gives the corresponding life table (using $l_{60}=100000$).
 
 ```{r,include=F}
 #Part b - calculating q_{x} 
@@ -315,7 +315,7 @@ sum(lx.unif.male[2:43])/100000 +0.5
 sum(lx.unif.female[2:43])/100000 +0.5
 ```
 
-To calculate the curtate life expectancy $e_{x}$, I used the formula $e_{x} = \frac{1}{l_{x}}\sum_{k=1}^{\infty}l_{x+k}$ then using the assumption of of a uniform distribution of deaths within each year the complete life expectancy, $\mathring{e_{x}}$ is $\mathring{e_{x}=e_{x}+0.5}$. Thus, using the calculated life table results above for the uniform distribution assumption the complete and curtate life expectancies for males aged 60 are **22.1** and **21.6** years respectively and for females aged 60 are **24.9** and **25.4** years respectively.
+To calculate the curtate life expectancy $e_{x}$, I used the formula $e_{x} = \frac{1}{l_{x}}\sum_{k=1}^{\infty}l_{x+k}$, then using the assumption of of a uniform distribution of deaths within each year the complete life expectancy, $\mathring{e_{x}}$ is $\mathring{e_{x}}=e_{x}+0.5$. Thus, using the calculated life table results above for the uniform distribution assumption the complete and curtate life expectancies for males aged 60 are **22.1** and **21.6** years respectively and for females aged 60 are **25.4** and  **24.9** years respectively ( to 1 d.p.).
 
 #### Part d:
 ```{r,include=F}
@@ -378,7 +378,7 @@ X2.female <- sum(test.data.female$test.stat)
 #(death rates the same in this insured population compared to whole population of England and Wales)
 ```
 
-To compare the deaths rates in the insured population to the whole population of England and Wales I used the chi-squared test. For both males and females all values of $E_{x}^{C}m_{x}^{S}$ were greater than 1 and for males 1 value (20%) was less than 5 ($E_{100}^{C}m_{100}^{S}=1.55$), thus for males the chi-squared test conclusion is reliable. For females 2 values (40%) were less than 5 ($E_{60}^{C}m_{60}^{S}=3.90$ and $E_{100}^{C}m_{100}^{S}=3.22$), thus the conclusions from the chi-squared test are less reliable for females. For males the chi-squared test statistic was 0.042 corresponding to a non-significant p-value of **1** (3 d.p.) and for females the chi-squared test statistic was 0.533 corresponding to a non-significant p-value of **0.991** (3 d.p.). Therefore, for both males and females there is no evidence the death rates are different between the insured population and the whole population of England and Wales from the test results and even though the results are less reliable for females due to the very high p-value (and thus very strong evidence) it is still unlikely that deaths rates for females are different between the populations.
+To compare the deaths rates in the insured population to the whole population of England and Wales I used the chi-squared test. For both males and females all values of $E_{x}^{C}m_{x}^{S}$ were greater than 1 and for males 1 value (20%) was less than 5 ($E_{100}^{C}m_{100}^{S}=1.55$), thus for males the chi-squared test conclusion was reliable. For females 2 values (40%) were less than 5 ($E_{60}^{C}m_{60}^{S}=3.90$ and $E_{100}^{C}m_{100}^{S}=3.22$), thus the conclusions from the chi-squared test were less reliable for females. For males the chi-squared test statistic was 0.042 corresponding to a non-significant p-value of **1** (3 d.p.) and for females the chi-squared test statistic was 0.533 corresponding to a non-significant p-value of **0.991** (3 d.p.). Therefore, for both males and females there is no evidence the death rates are different between the insured population and the whole population of England and Wales using the chi-squared test. Even though the results are less reliable for females, due to the very high p-value (and thus very strong evidence) it is still very unlikely that deaths rates for females are different between the insured and whole population.
 
 #### Part e:
 ```{r,include=F}
@@ -403,7 +403,7 @@ comp.mort.plot.data <- rbind(gomp.mx,comp.mort.plot.data)%>%
          shape2=c(rep(16,43),rep(17,43)))
 ```
 Using a Gompertz log-linear model to produce a set of graduated central mortality rates from the crude mortality data and then plotting both it and the crude  central mortality rates on the log scale gives the below graph. It shows a good fit of the graduated rates to the crude rates as the graduated rates are consistently close to the crude rates on the log scale.
-```{r,echo=F,fig.align='center',fig.width=10,fig.height=4}
+```{r,echo=F,fig.align='center',fig.width=10,fig.height=3.5}
 ggplot(aes(x=Age,y=log.mx,colour=type),data=comp.mort.plot.data)+
   geom_point(shape=comp.mort.plot.data$shape2)+
   geom_line()+
