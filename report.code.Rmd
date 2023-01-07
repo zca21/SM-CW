@@ -26,7 +26,7 @@ library(readxl)
 # Question 1:
 \vspace{-5truemm}
 #### Part a:
-Producing Kaplan Meier estimates of the 38 patients with lymphocytic non-Hodgkins lymphoma who have been classified into 2 groups, symptomatic(n=10) and asymptomatic(n=28) gives the below plot.
+Producing Kaplan Meier estimates of the 38 patients with lymphocytic non-Hodgkins lymphoma who have been classified into 2 groups, symptomatic (n=10) and asymptomatic (n=28) gives the below plot.
 ```{r,include=F}
 #Data explortation
 lymp.data%>%
@@ -52,7 +52,7 @@ plot(lymp.km,
 legend("topright", legend = c("Asymptomatic", "Symptomatic"),
 col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
 ```
-Viewing the plot, the asymptomatic group has a higher survival probability than the symptomatic group, thus those in the asymptomatic group have a longer survival time than those in the symptomatic group on average. Furthermore, performing a log-rank test we attain a Chi-Squared statistic of 8.7 with 1 degree of freedom which corresponds to a significant p-value of **0.003**. Thus, we reject the null hypothesis of no difference in survival between the groups. Therefore, we have evidence that there is a statistically significant difference of survival between the groups, backing up the analysis of the Kaplan Meier plot.
+Viewing the plot, the asymptomatic group has a higher estimated survival probability for all time compared to the symptomatic group (except when both survival probabilities are 1), thus those in the asymptomatic group have a longer survival time than those in the symptomatic group on average. Furthermore, performing a log-rank test we attain a Chi-Squared statistic of 8.7 with 1 degree of freedom which corresponds to a significant p-value of **0.003**. Thus, we reject the null hypothesis of no difference in survival between the groups. Therefore, we have evidence that there is a statistically significant difference of survival between the groups, backing up the analysis of the Kaplan Meier plot.
 
 #### Part b:
 ```{r,include=F}
@@ -95,7 +95,24 @@ summary(lymp.na)
 ```
 
 ```{r,echo=F,fig.align='center'}
-par(mfrow = c(1,2))
+# par(mfrow = c(1,2))
+# plot(lymp.na,
+#      col=c("red","blue"),
+#      xlab = "Time (weeks)",
+#      ylab = "Survival probability",
+#      main = "Nelson-Aalen survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma",
+#      cex.main=0.8)
+# legend("topright", legend = c("Asymptomatic", "Symptomatic"),
+# col = c("red", "blue"), lty = c(1, 1), cex = 0.5)
+# plot(lymp.km,
+#      col=c("red","blue"),
+#      xlab = "Time (weeks)",
+#      ylab = "Survival probability",
+#      main = "Kaplan Meier survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma",
+#      cex.main=0.8)
+# legend("topright", legend = c("Asymptomatic", "Symptomatic"),
+# col = c("red", "blue"), lty = c(1, 1), cex = 0.5)
+
 plot(lymp.na,
      col=c("red","blue"),
      xlab = "Time (weeks)",
@@ -104,16 +121,8 @@ plot(lymp.na,
      cex.main=0.8)
 legend("topright", legend = c("Asymptomatic", "Symptomatic"),
 col = c("red", "blue"), lty = c(1, 1), cex = 0.5)
-plot(lymp.km,
-     col=c("red","blue"),
-     xlab = "Time (weeks)",
-     ylab = "Survival probability",
-     main = "Kaplan Meier survival estimates of patients \n with lymphocytic non-Hodgkins lymphoma",
-     cex.main=0.8)
-legend("topright", legend = c("Asymptomatic", "Symptomatic"),
-col = c("red", "blue"), lty = c(1, 1), cex = 0.5)
 ```
-Viewing the survival estimates via plots they appear very similar for the asymptomatic group, for the symptomatic group the Nelson-Aalen estimates diverge slightly in the positive direction from the Kaplan Meier estimates as time increases (survival probability is larger for Nelson-Aalen estimates later in the study compared to the Kaplan Meier estimates). In more detail, the survival estimates are very similar for the asymptomatic group as the value of $\frac{d_{j}}{r_{j}}$ (where $d_{j}$ is number of events at observed event time $t_{j}$ and $r_{j}$ is number at risk at $t_{j}$) is small for all observed event times $t_{j}$ with the largest value of $\frac{1}{13}$ at event time 301 weeks. Thus by Taylor expansion the survival estimates are approximately equal ($\hat{S}_{NA}(t) \approx \hat{S}_{KM}(t)$) for the asymptomatic group. This is what also causes the larger differences in estimates for the symptomatic group as the sample size is smaller for this subgroup causing the value of $\frac{d_{j}}{r_{j}}$ to be larger, with the largest value of 0.5 at event time 281 weeks. Thus, this larger value of $\frac{d_{j}}{r_{j}}$  at later event times causes the larger difference in survival estimates observed due to the approximation from Taylor expansion being less reliable.
+Viewing the Nelson-Aalen survival estimates via plots they appear very similar to the Kaplan Meier estimates for the asymptomatic group, for the symptomatic group the Nelson-Aalen estimates diverge slightly in the positive direction from the Kaplan Meier estimates as time increases (survival probability is larger for Nelson-Aalen estimates later in the study compared to the Kaplan Meier estimates). In more detail, the survival estimates are very similar for the asymptomatic group as the value of $\frac{d_{j}}{r_{j}}$ (where $d_{j}$ is number of events at observed event time $t_{j}$ and $r_{j}$ is number at risk at $t_{j}$) is small for all observed event times $t_{j}$ with the largest value of $\frac{1}{13}$ at event time 301 weeks. Thus by Taylor expansion the survival estimates are approximately equal ($\hat{S}_{NA}(t) \approx \hat{S}_{KM}(t)$) for the asymptomatic group. This is what also causes the larger differences in estimates for the symptomatic group as the sample size is smaller for this subgroup causing the value of $\frac{d_{j}}{r_{j}}$ to be larger at high event times, with the largest value of 0.5 at event time 281 weeks. Thus, this larger value of $\frac{d_{j}}{r_{j}}$  at later event times causes the larger difference in survival estimates observed due to the approximation from Taylor expansion being less reliable.
 
 
 #### Part e:
@@ -188,7 +197,7 @@ col = c("red", "blue"), lty = c(1, 1), cex = 0.8)
 ```
 
 #### Part c:
-Using the same model selection criteria of AIC using the Cox proportional hazards model starting with the hierarchical model with the three way interaction between age, weight and length (and thus all lower order terms) my final model is the null model with a AIC of **128.00** compared to the initial models AIC of **135.44**. Thus, using my final model none of the covariates age, weight and length affect the survival of the ducks and when fitting a model with all 3 covariates, none are significant at $\alpha=0.05$. Therefore using this model the survival of the ducks does not depend on their age, weight or length using the provided data.
+Using the same model selection criteria of AIC using the Cox proportional hazards model starting with a hierarchical model with a three way interaction between age, weight and length (and thus all lower order terms) my final model is the null model with a AIC of **128.00** compared to the initial models AIC of **135.44**. Thus, using my final model none of the covariates age, weight and length affect the survival of the ducks. Furthermore, fitting a model with the 3 covariates age, weight and length, none are significant at $\alpha=0.05$. Therefore, from the cox proportional hazard models I conclude that the survival of the ducks does not depend on their age, weight or length using the provided data.
 ```{r, include=F}
 #Fitting cox models
 duck.cox.all <- coxph(Surv(Time,event=Observed)~Age*Weight*Length,data=duck.data)
@@ -240,7 +249,7 @@ plot.mort.data <- rbind(plot.mort.data.female,plot.mort.data.male)%>%
   mutate(log.cc.mort.rate=log(cc.mort.rate))
 ```
 
-Calculating the crude central mortality rates $m_{x}$ for male and female pensioners using $\hat{m_{x}}=\frac{D_{x}}{E_{x}^{C}}$ ($D_{x}$ the number of deaths at age $x$ and $E_{x}^{C}$ the central exposed risk at age $x$) and plotting it on the log scale gives the below graph. In it we can see that $log(m_{x})$ is higher for males than for females at all ages with the exception of ages 63, 95, 96, 102. Thus, overall this graph suggests that $log(m_{x})$ and therefore $m_{x}$, the crude central mortality rate is higher for male pensioners than female pensioners.
+Calculating the crude central mortality rates $m_{x}$ for male and female pensioners using $\hat{m_{x}}=\frac{D_{x}}{E_{x}^{C}}$ (where $D_{x}$ is the number of deaths at age $x$ and $E_{x}^{C}$ is the central exposed risk at age $x$) and plotting it on the log scale gives the below graph. In it we can see that $log(m_{x})$ is higher for males than for females at all ages with the exception of ages 63, 95, 96, 102. Thus, overall this graph suggests that $log(m_{x})$ and therefore $m_{x}$, the crude central mortality rate is higher for male pensioners than female pensioners.
 ```{r,echo=F,fig.align='center',fig.width=10,fig.height=4}
 #Plotting
 ggplot(aes(x=Age,y=log.cc.mort.rate,colour=gender),data=plot.mort.data)+
@@ -251,7 +260,7 @@ ggplot(aes(x=Age,y=log.cc.mort.rate,colour=gender),data=plot.mort.data)+
 ```
 
 #### Part b:
-Calculating $q_{x}$ for males and female using both the assumption of constant force of mortality and uniform distribution of deaths within each year of age gives the corresponding life table (using $l_{60}=100000$).
+Calculating $q_{x}$ for males and female using both the assumption of constant force of mortality and uniform distribution of deaths within each year of age gives the corresponding life table (using $l_{60}=100000$) below.
 
 ```{r,include=F}
 #Part b - calculating q_{x} 
